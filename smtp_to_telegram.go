@@ -114,9 +114,22 @@ func main() {
 			fmt.Printf("%s\n", err)
 			os.Exit(1)
 		}
+
+		botTokenFilePath := c.String("telegram-bot-token")
+		botTokenContent, err := ioutil.ReadFile(botTokenFilePath)
+		if err != nil {
+			return err
+		}
+
+		chatIdsFilePath := c.String("telegram-chat-ids")
+		chatIdsContent, err := ioutil.ReadFile(chatIdsFilePath)
+		if err != nil {
+			return err
+		}
+
 		telegramConfig := &TelegramConfig{
-			telegramChatIds:                  c.String("telegram-chat-ids"),
-			telegramBotToken:                 c.String("telegram-bot-token"),
+			telegramChatIds:                  string(chatIdsContent),
+			telegramBotToken:                 string(botTokenContent),
 			telegramApiPrefix:                c.String("telegram-api-prefix"),
 			telegramApiTimeoutSeconds:        c.Float64("telegram-api-timeout-seconds"),
 			messageTemplate:                  c.String("message-template"),
@@ -153,14 +166,14 @@ func main() {
 		},
 		&cli.StringFlag{
 			Name:     "telegram-chat-ids",
-			Usage:    "Telegram: comma-separated list of chat ids",
-			EnvVars:  []string{"ST_TELEGRAM_CHAT_IDS"},
+			Usage:    "Telegram: file path to a comma-separated list of chat ids",
+			EnvVars:  []string{"ST_TELEGRAM_CHAT_IDS_FILE"},
 			Required: true,
 		},
 		&cli.StringFlag{
 			Name:     "telegram-bot-token",
-			Usage:    "Telegram: bot token",
-			EnvVars:  []string{"ST_TELEGRAM_BOT_TOKEN"},
+			Usage:    "Telegram: file path to the bot token",
+			EnvVars:  []string{"ST_TELEGRAM_BOT_TOKEN_FILE"},
 			Required: true,
 		},
 		&cli.StringFlag{

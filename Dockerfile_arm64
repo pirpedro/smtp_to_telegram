@@ -1,0 +1,31 @@
+FROM arm64v8/golang AS builder
+
+RUN apt update && apt install git ca-certificates mailcap -y
+
+WORKDIR /app
+
+COPY . .
+
+# The image should be built with
+# --build-arg ST_VERSION=`git describe --tags --always`
+ENV GOARCH=arm
+ARG ST_VERSION
+ARG GOPROXY=direct
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags "-s -w \
+    -X main.Version=${ST_VERSION:-UNKNOWN_RELEASE}" \
+    -a -o smtp_to_telegram
+
+
+FROM arm64v8/alpine:3.19
+
+RUN apk add --no-cache ca-certificates mailcap
+
+COPY --from=builder /app/smtp_to_telegram /smtp_to_telegram
+
+USER daemon
+
+ENV ST_SMTP_LISTEN="0.0.0.0:2525"
+EXPOSE 2525
+
+ENTRYPOINT ["/smtp_to_telegram"]
