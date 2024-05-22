@@ -4,9 +4,10 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/KostyaEsmukov/smtp_to_telegram?style=flat-square)][Go Report Card]
 [![License](https://img.shields.io/github/license/KostyaEsmukov/smtp_to_telegram.svg?style=flat-square)][License]
 
-[Docker Hub]:      https://hub.docker.com/r/kostyaesmukov/smtp_to_telegram
-[Go Report Card]:  https://goreportcard.com/report/github.com/KostyaEsmukov/smtp_to_telegram
 [License]:         https://github.com/KostyaEsmukov/smtp_to_telegram/blob/master/LICENSE
+
+NOTE: changed the way we handle some enviroment variable to use the secrets standard in a swarm cluster.
+For that the variables ST_TELEGRAM_CHAT_IDS and ST_TELEGRAM_BOT_TOKEN become ST_TELEGRAM_CHAT_IDS_FILE and ST_TELEGRAM_BOT_TOKEN_FILE so we can pass a secret path to the app.
 
 `smtp_to_telegram` is a small program which listens for SMTP and sends
 all incoming Email messages to Telegram.
@@ -22,15 +23,20 @@ the notification mail would be sent to the chosen Telegram chats.
    the messages, press `/start`.
 3. Retrieve a chat id with `curl https://api.telegram.org/bot<BOT_TOKEN>/getUpdates`.
 4. Repeat steps 2 and 3 for each Telegram account which should receive the messages.
-5. Start a docker container:
+5. Build the project with Dockerfile (for amd64) or Dockerfile_arm64 (for arm64v8)
+```
+docker build -f Dockerfile_arm64 -t smpt_to_telegram .
+```
+6. Start a docker container:
 
 ```
 docker run \
     --name smtp_to_telegram \
-    -e ST_TELEGRAM_CHAT_IDS=<CHAT_ID1>,<CHAT_ID2> \
-    -e ST_TELEGRAM_BOT_TOKEN=<BOT_TOKEN> \
-    kostyaesmukov/smtp_to_telegram
+    -e ST_TELEGRAM_CHAT_IDS_FILE=/path/to/file \
+    -e ST_TELEGRAM_BOT_TOKEN_FILE=/path/to/file \
+    smtp_to_telegram
 ```
+You can send to multiple Ids, just separate with commas in ST_TELEGRAM_CHAT_IDS_FILE file.
 
 Assuming that your Email-sending software is running in docker as well,
 you may use `smtp_to_telegram:2525` as the target SMTP address.
@@ -47,8 +53,8 @@ A custom format might be specified as well:
 ```
 docker run \
     --name smtp_to_telegram \
-    -e ST_TELEGRAM_CHAT_IDS=<CHAT_ID1>,<CHAT_ID2> \
-    -e ST_TELEGRAM_BOT_TOKEN=<BOT_TOKEN> \
+     -e ST_TELEGRAM_CHAT_IDS_FILE=/path/to/file \
+    -e ST_TELEGRAM_BOT_TOKEN_FILE=/path/to/file \
     -e ST_TELEGRAM_MESSAGE_TEMPLATE="Subject: {subject}\\n\\n{body}" \
-    kostyaesmukov/smtp_to_telegram
+    smtp_to_telegram
 ```
